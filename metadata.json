@@ -1,0 +1,6 @@
+{
+  "name": "Odia Tutor PDF Maker",
+  "description": "Educational coaching PDF generator with premium templates and KaTeX formatting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

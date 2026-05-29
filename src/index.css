@@ -1,0 +1,98 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Sans+Oriya:wght@400;500;600;700&display=swap');
+
+@theme {
+  --font-sans: "Poppins", "Noto Sans Oriya", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer utilities {
+  .page-break-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    display: block !important;
+  }
+}
+
+:root {
+  --bg-color: #ffffff;
+  --text-color: #111827;
+  --primary: #f97316; /* orange-500 */
+  --primary-light: #fff7ed; /* orange-50 */
+  --answer-bg: #f0fdf4; /* green-50 */
+  --answer-border: #22c55e; /* green-500 */
+  --card-bg: #ffffff;
+  --header-grad-from: #f97316;
+  --header-grad-to: #ea580c;
+  --header-text: #ffffff;
+  --shadow-color: rgba(0,0,0,0.1);
+  --pdf-bg: #f8fafc;
+}
+
+.theme-blue {
+  --primary: #2563eb; 
+  --primary-light: #eff6ff; 
+  --answer-bg: #f0fdf4; 
+  --answer-border: #22c55e; 
+  --card-bg: #ffffff;
+  --header-grad-from: #2563eb;
+  --header-grad-to: #1d4ed8;
+  --pdf-bg: #f8fafc;
+}
+
+.theme-dark {
+  --bg-color: #111827;
+  --text-color: #f3f4f6;
+  --primary: #fb923c; 
+  --primary-light: #1f2937; 
+  --answer-bg: #064e3b; 
+  --answer-border: #10b981; 
+  --card-bg: #1f2937;
+  --header-grad-from: #1f2937;
+  --header-grad-to: #111827;
+  --shadow-color: rgba(0,0,0,0.5);
+  --pdf-bg: #111827;
+}
+
+.theme-glass {
+  --bg-color: #f3f4f6;
+  --text-color: #1f2937;
+  --primary: #8b5cf6;
+  --primary-light: rgba(255,255,255,0.4);
+  --answer-bg: rgba(255,255,255,0.5);
+  --answer-border: #10b981;
+  --card-bg: rgba(255,255,255,0.6);
+  --header-grad-from: rgba(139, 92, 246, 0.8);
+  --header-grad-to: rgba(109, 40, 217, 0.8);
+  --shadow-color: rgba(31,38,135,0.1);
+  --pdf-bg: #f3f4f6;
+}
+
+.glass-card {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.8);
+}
+
+/* Fix KaTeX fraction lines which are overridden by Tailwind CSS borders */
+.katex .frac-line {
+  border-bottom-color: currentColor !important;
+  border-bottom-style: solid !important;
+  border-bottom-width: max(1.5px, 0.05em) !important;
+}
+
