@@ -91,6 +91,12 @@ export default function App() {
      return () => ro.disconnect();
   }, [activeTab]);
 
+  // Set document title for PDF print filename
+  useEffect(() => {
+    const filename = `${subject || 'Document'}_${chapter || 'Chapter'}_OdiaTutor`.replace(/\s+/g, '_');
+    document.title = filename;
+  }, [subject, chapter]);
+
   const generatePDF = () => {
     if (activeTab === 'editor' && window.innerWidth < 1024) {
         setActiveTab('preview');
