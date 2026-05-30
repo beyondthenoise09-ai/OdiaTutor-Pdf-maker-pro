@@ -4,11 +4,10 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { parseText } from './utils/parser';
 import { LivePreview } from './components/LivePreview';
-import { Download, Settings, Menu, LayoutTemplate, X, Settings2, Code, MoveLeft, Moon, Sun, Type } from 'lucide-react';
-import html2pdf from 'html2pdf.js';
+import { Download, LayoutTemplate, Code, X, Printer, FileText } from 'lucide-react';
 
 type Theme = 'orange' | 'dark' | 'blue' | 'glass';
 
@@ -46,10 +45,10 @@ export default function App() {
   const [subject, setSubject] = useState('Physics');
   const [chapter, setChapter] = useState('Forces and Laws of Motion');
   const [theme, setTheme] = useState<Theme>('orange');
-  const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
   const [scale, setScale] = useState(1);
   const [previewHeight, setPreviewHeight] = useState(1123);
+  const [showPrintModal, setShowPrintModal] = useState(false);
   
   const previewRef = useRef<HTMLDivElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -92,81 +91,24 @@ export default function App() {
      return () => ro.disconnect();
   }, [activeTab]);
 
-  const generatePDF = async () => {
-    if (!previewRef.current) return;
-    setIsGenerating(true);
-    
-    const element = previewRef.current;
-    
-    const opt = {
-      margin: [15, 10, 25, 10] as [number, number, number, number], // top, left, bottom, right
-      filename: `${subject || 'Document'}_${chapter || 'Chapter'}_OdiaTutor.pdf`.replace(/\s+/g, '_'),
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true,
-        letterRendering: true,
-        scrollY: 0,
-        windowWidth: 794,
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
-      pagebreak: { mode: ['css', 'legacy'], avoid: '.page-break-avoid' },
-    };
-
-    try {
-      // Small delay for UI updates
-      await new Promise(r => setTimeout(r, 200));
-
-      const worker: any = html2pdf().set(opt).from(element);
-      
-      await worker.toPdf().get('pdf').then((pdf: any) => {
-        // Add footer with page numbering and watermark globally
-        const totalPages = pdf.internal.getNumberOfPages();
-        const pWidth = pdf.internal.pageSize.getWidth();
-        const pHeight = pdf.internal.pageSize.getHeight();
-
-        for (let i = 1; i <= totalPages; i++) {
-          pdf.setPage(i);
-          
-          // --- Footer Orange Line ---
-          pdf.setDrawColor(249, 115, 22);
-          pdf.setLineWidth(0.5);
-          pdf.line(15, pHeight - 15, pWidth - 15, pHeight - 15);
-
-          // --- Footer Text ---
-          pdf.setFontSize(10);
-          pdf.setTextColor(120, 120, 120);
-          
-          // Left Side: Subject Name, Class, By Odia Tutor
-          pdf.text(
-            `Subject: ${subject || 'General'} | By ODIA TUTOR`,
-            15, 
-            pHeight - 10,
-            { align: 'left' }
-          );
-
-          // Right Side: Page Number
-          pdf.text(
-            `Page ${i} of ${totalPages}`,
-            pWidth - 15,
-            pHeight - 10,
-            { align: 'right' }
-          );
-        }
-      });
-      
-      await worker.save();
-    } catch (e: any) {
-      console.error("PDF Gen Error:", e);
-    } finally {
-      setIsGenerating(false);
+  const generatePDF = () => {
+    if (activeTab === 'editor' && window.innerWidth < 1024) {
+        setActiveTab('preview');
+        setTimeout(() => setShowPrintModal(true), 300);
+    } else {
+        setShowPrintModal(true);
     }
+  };
+
+  const executePrint = () => {
+      setShowPrintModal(false);
+      setTimeout(() => window.print(), 300);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans overflow-hidden">
       {/* Navbar */}
-      <nav className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between shrink-0 z-20 sticky top-0 shadow-sm">
+      <nav className="print-hide h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between shrink-0 z-20 sticky top-0 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="bg-gradient-to-br from-orange-500 to-red-500 text-white p-2 rounded-lg shadow-md">
             <LayoutTemplate size={24} />
@@ -210,21 +152,16 @@ export default function App() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={generatePDF}
-            disabled={isGenerating}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2 shadow-sm shadow-orange-500/20 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2 shadow-sm shadow-orange-500/20 transition-colors"
           >
-            {isGenerating ? (
-               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-               <Download size={18} />
-            )}
-            {isGenerating ? 'Generating...' : 'Export PDF'}
+            <Download size={18} />
+            Export High-Quality PDF
           </motion.button>
         </div>
       </nav>
 
       {/* Mobile inputs & Tabs */}
-      <div className="lg:hidden flex flex-col bg-white border-b border-gray-200 shrink-0">
+      <div className="print-hide lg:hidden flex flex-col bg-white border-b border-gray-200 shrink-0">
           <div className="flex gap-2 p-4 pb-2">
             <input 
                 type="text" 
@@ -261,7 +198,7 @@ export default function App() {
       <main className="flex-1 overflow-hidden flex flex-col lg:flex-row min-h-0">
         
         {/* Editor Panel */}
-        <div className={`w-full lg:w-1/2 flex-col bg-white border-r border-gray-200 h-full ${activeTab === 'editor' ? 'flex' : 'hidden lg:flex'}`}>
+        <div className={`print-hide w-full lg:w-1/2 flex-col bg-white border-r border-gray-200 h-full ${activeTab === 'editor' ? 'flex' : 'hidden lg:flex'}`}>
            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50">
               <div className="flex items-center gap-2 text-gray-700 font-medium text-sm">
                  <Code size={16} />
@@ -280,24 +217,24 @@ export default function App() {
         </div>
 
         {/* Preview Panel */}
-        <div className={`w-full lg:w-1/2 flex-col bg-gray-100 h-full overflow-hidden relative ${activeTab === 'preview' ? 'flex' : 'hidden lg:flex'}`}>
-           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white/50 backdrop-blur-sm z-10 sticky top-0 shadow-sm hidden lg:flex">
+        <div className={`print-show-full w-full lg:w-1/2 flex-col bg-gray-100 h-full overflow-hidden relative ${activeTab === 'preview' ? 'flex' : 'hidden lg:flex'}`}>
+           <div className="print-hide flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white/50 backdrop-blur-sm z-10 sticky top-0 shadow-sm hidden lg:flex">
               <div className="flex items-center gap-2 text-gray-700 font-medium text-sm">
                  <LayoutTemplate size={16} />
                  <span>Live PDF Preview</span>
               </div>
            </div>
            
-           <div ref={previewContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 bg-gray-200 custom-scrollbar relative">
+           <div ref={previewContainerRef} className="print-show-full flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 bg-gray-200 custom-scrollbar relative">
               <div 
-                 className="mx-auto flex justify-center" 
+                 className="mx-auto flex justify-center print-show-full printable-pdf-wrapper" 
                  style={{ 
                     width: `${794 * scale}px`, 
                     height: `${previewHeight * scale}px` 
                  }}
               >
                 <div 
-                  className="origin-top-left bg-white"
+                  className="origin-top-left bg-white printable-pdf"
                   style={{ 
                     transform: `scale(${scale})`,
                     width: '794px', 
@@ -312,6 +249,73 @@ export default function App() {
         </div>
 
       </main>
+
+      <AnimatePresence>
+        {showPrintModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                   <Printer size={20} className="text-orange-500" />
+                   High-Quality PDF Export
+                </h3>
+                <button 
+                  onClick={() => setShowPrintModal(false)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="p-6">
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                  To ensure perfect clarity and support for any number of pages, we use the browser's native PDF engine. 
+                  When the print dialog opens:
+                </p>
+                <ol className="space-y-4 mb-8">
+                  <li className="flex gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm">1</span>
+                    <span className="text-gray-700">Change the <strong>Destination</strong> to <strong>Save as PDF</strong>.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm">2</span>
+                    <span className="text-gray-700">Ensure <strong>Headers and Footers</strong> are turned <strong>off</strong>.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm">3</span>
+                    <span className="text-gray-700">Click <strong>Save</strong>.</span>
+                  </li>
+                </ol>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setShowPrintModal(false)}
+                    className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={executePrint}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-medium shadow-md shadow-orange-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  >
+                    <FileText size={18} />
+                    Open Print Dialog
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

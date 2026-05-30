@@ -17,7 +17,13 @@ const isMath = (text: string) => {
 }
 
 export const parseText = (rawText: string): ParsedBlock[] => {
-  const rawBlocks = rawText.split(/\n\s*\n/).filter(b => b.trim() !== '');
+  // Pre-process text to insert double newlines before explicit markers so they become separate blocks
+  const processedText = rawText.replace(
+    /\n(?=(?:Q|Question)\s*(?:\d+)?[.\-:\]\)]|Ans(?:wer)?\s*[.\-:]|\d+\.|---|##)/gi, 
+    '\n\n'
+  );
+  
+  const rawBlocks = processedText.split(/\n\s*\n/).filter(b => b.trim() !== '');
   
   return rawBlocks.map((block, index) => {
     const trimmed = block.trim();
@@ -29,7 +35,7 @@ export const parseText = (rawText: string): ParsedBlock[] => {
       type = 'Question';
     } else if (/^(?:Ans|Answer)\s*[.\-:]/i.test(trimmed)) {
       type = 'Answer';
-    } else if (/^(?:MCQ|True\/False|Extract Questions|Long Questions|Notes|Activities|Section|Chapter)/i.test(trimmed)) {
+    } else if (/^(?:MCQ|True\/False|Extract Questions|Long Questions|Notes|Activities|Section|Chapter|##|ଉଦାହରଣ)/i.test(trimmed)) {
       type = 'Section';
     } else if (/^(?:Note|Important):/i.test(trimmed)) {
       type = 'Note';

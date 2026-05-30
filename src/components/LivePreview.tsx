@@ -14,7 +14,7 @@ export const LivePreview = forwardRef<HTMLDivElement, LivePreviewProps>(
     return (
       <div 
         ref={ref} 
-        className="w-full h-full bg-[var(--pdf-bg)] text-[var(--text-color)] text-left relative printable-pdf"
+        className="w-full bg-[var(--pdf-bg)] text-[var(--text-color)] text-left relative printable-pdf"
       >
         <div className="relative z-10 px-8 py-10 md:px-12 md:py-16">
           {/* Header */}
